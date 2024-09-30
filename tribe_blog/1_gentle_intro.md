@@ -1,12 +1,19 @@
-# A Gentle Introduction to Structured Generation with Anthropic and Pydantic
+# A Gentle Introduction to Structured Generation with Anthropic API
 
 ## Building Reproducible LLM Applications
 
-This is the first article in a series that introduces structured generation, a paradigm aimed at reducing the unpredictability of LLMs by ensuring their outputs adhere to predefined formats. The tutorials will cover the general idea of structured generation and how to implement it in Python using Anthropic's Large Language Models (LLMs) inference API and the Pydantic library for schema generation and validation. We hope this short series will help clarify doubts about LLM reliability and lay the groundwork for building more dependable LLM applications.
 
-This post introduces structured generation, an approach to improve LLM reliability by guiding outputs to follow predefined formats. We'll start by gently reviewing the basic concepts, then jump into a practical example of guiding Anthropic's Claude 3.5 Sonnet model to output structured data in different formats. In follow-up tutorials, we'll explore more advanced ways to guide the model using assistant response prefilling and function calling, as well as how to conveniently generate and validate schemas using the Pydantic library. The final blog post will develop a complete example of legal text classification.
+Welcome to our short series of articles on structured generation, a paradigm designed to reduce the unpredictability of large language models (LLMs) by ensuring that their outputs adhere to predefined formats. 
 
-You can find the raw markdown file for this blogpost and the complete code for the examples in this [github repository](https://github.com/HK3-Lab-Team/StructuredGenTutorial). If you want to run yourself the code clone the repository and run the following Jupyter notebook: [blog1.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/blog1.ipynb).
+The goal of the series is to show how structured generation can be implemented in Python using Anthropic's LLMs inference API. 
+As a first step, this post will introduce the basic concepts behind structured generation and walk you through a practical example where Anthropic's Claude 3.5 Sonnet model is guided to produce structured data in many formats. You can find the raw markdown file for the post and the complete code for the examples in our [github repository](https://github.com/HK3-Lab-Team/StructuredGenTutorial). To run the code yourself, simply clone the repository and execute the Jupyter notebook [gentle-intro.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/gentle-intro.ipynb).
+
+In follow-up tutorials, we will explore more advanced techniques for structured generation using assistant response prefilling and function calling. We’ll also demonstrate how to generate and validate schemas efficiently with the Python Pydantic library. We will wrap up the series with a complete example of legal text classification. 
+
+By the end of it, you will have gained concrete strategies for building more robust LLM-powered applications, and a theoretical understanding of LLMs, with a particular focus on their (un)reliability. 
+
+
+
 
 **Enrica Troiano¹ and Tommaso Furlanello¹²**
 
@@ -15,12 +22,13 @@ You can find the raw markdown file for this blogpost and the complete code for t
 
 **Correspondence:** {name}.{surname}@hk3lab.ai
 
-## Abstract
+## Motivation
 
 
-Since December 2022, a new generation of large language models (LLMs) has demonstrated remarkable capabilities, sparking excitement about their potential to revolutionize various industries. These models exhibit human-like language skills and possess extensive knowledge across many domains, leading to their integration into numerous enterprise workflows for tasks like content generation, data analysis, and decision-making.
+In December 2022, we hailed a new generation of large language models (LLMs) as a godsend for far-reaching technological revolutions. The linguistic skills of these models had become so astoundingly human-like, and their knowledge so exceptional in breadth, that they could 
+feature at the same time buddies to chat with and powerful tools to lead industrial progress. 
 
-However, the very feature that makes LLMs so powerful - their ability to generate human-like text - also presents challenges when integrating them into enterprise systems. The inconsistency and unpredictability of their outputs can be particularly problematic.
+As a matter of fact, the first LLM-powered applications focused on content generation for human consumption, and today they represent a key workforce in many enterprises, aiding activities like data analysis and decision-making. However, the very feature that makes LLMs so powerful - their ability to generate human-like text - also presents challenges when integrating them into enterprise systems. The inconsistency and unpredictability of their outputs can be particularly problematic.
 
 Anyone who has used Claude, Anthropic's LLM-powered virtual assistant, knows that it can provide different answers when asked the same question multiple times. Moreover, the format of the answers doesn't always align with users' expectations:
 
@@ -41,9 +49,15 @@ In future tutorials, we'll review more advanced methods such as assistant respon
 
 
 
-The rationale behind the use of output constraints is to narrow the possible LLM's answers down to the answers that have certain characteristics. That way, we maintain control over complex applications using LLMs, because we force the responses to have a format that is consistent with the expectations of our systems. For example, in a customer support chatbot, we may require a response composed of two parts, one that is a direct answer for the customer's question, and the other that offers a detailed log and explanation for the company's database. Let's look at two examples to illustrate this:
+The rationale behind the use of output constraints is to narrow the possible LLM's answers down to the answers that have certain characteristics. That way, we maintain control over complex applications based on LLMs, because we force the responses to have a format that is consistent with our expectations. For example, in a customer support chatbot, we may require a response composed of two parts, one that is a direct answer for the customer's question, and the other that offers a detailed log and explanation for the company's database. 
 
-#### Without enforcing syntax:
+
+Somewhat implicitly, we already exert that control as soon as we prompt a model with our queries: a prompt is the input condition that determines what tokens the model returns, i.e., what answer (from the space all possible answers) is appropriate to the user's input. But finding a prompt that elicits the desired output format can be a long trial-and-error process. We must experiment with prompt variations and see if the model's responses change accordingly. We may eventually find the prompt that works the best for a specific task, but we have no guarantee it will lead to the desired output format systematically. 
+
+Structured generation complements and enhances prompt engineering, offering a more systematic approach to controlling LLM outputs. 
+Let's look at two examples to illustrate this.
+
+#### Example 1: Without enforcing syntax.
 
 ```
 User: "What's the status of my order #12345?"
@@ -61,7 +75,7 @@ def process_unstructured_response(response: str):
 process_unstructured_response(LLM_response)
 ```
 
-#### With structured generation:
+#### Example 2: With structured generation.
 
 ```
 User: "What's the status of my order #12345?"
@@ -101,18 +115,14 @@ process_structured_response(LLM_response)
 
 In the first example, the LLM provides a human-friendly response that answers the question but doesn't follow any particular structure. This is fine for direct human interaction but can be challenging for automated systems to parse and process.
 
-In the second example, using structured generation, the LLM's response is formatted in a specific JSON structure. This format clearly separates the customer-facing response from the internal log information. The structured output makes it easy for the system to:
+In the second example, which uses structured generation, the LLM's response is formatted in a specific JSON structure. This format clearly separates the customer-facing response from the internal log information. The structured output makes it easy for the system to:
 
 1. Extract the customer response for display
 2. Store detailed order information in a database
 3. Update internal tracking systems
 4. Trigger automated processes based on the order status
 
-As demonstrated in the code snippets, processing the structured response is much simpler and less error-prone than trying to parse an unstructured response.
-
-Somewhat implicitly, we already exert that control as soon as we prompt a model with our queries: a prompt is the input condition that determines what tokens the model returns, i.e., what answer (from the space all possible answers) is appropriate to the user's input. But finding a prompt that elicits the desired output format can be a long trial-and-error process. We must experiment with prompt variations and see if the model's responses change accordingly. We may eventually find the prompt that works the best for a specific task, but we have no guarantee it will lead to the desired output format systematically. 
-
-Structured generation complements and enhances prompt engineering, offering a more systematic approach to controlling LLM outputs. By combining these techniques, we can achieve more precise and reliable results. Structured generation can be implemented explicitly through careful prompting of the model or implicitly with an algorithm called guided decoding, which manipulates the model generation at each token to enforce the desired structure.
+Overall, processing a structured response is much simpler and less error-prone than trying to parse an unstructured response.
 
 
 ### KEY COMPONENTS OF STRUCTURED GENERATION
@@ -123,9 +133,13 @@ To implement structured generation effectively, we focus on two main aspects:
 
 2. Validation and processing: We implement mechanisms to validate the model's output against our defined schema, ensuring it meets our criteria before further processing or merging into other systems.
 
-These components work together to create a robust framework for generating structured outputs from LLMs. By leveraging both traditional prompt engineering and structured generation techniques, we can exert fine-grained control over the model's responses while maintaining flexibility. Let's explore how to implement these concepts in Python in the Anthropic API.
+These components work together to create a robust framework for generating structured outputs from LLMs. 
 
-## Obtaining Structured Outputs with Anthropic's Claude API
+
+
+## Obtaining Structured Outputs via Prompt Engineering with Anthropic's Claude API
+
+Structured generation can be implemented explicitly through careful prompting of the model or implicitly with an algorithm called guided decoding, which manipulates the model generation at each token to enforce the desired structure. By leveraging both, we can exert fine-grained control over the model's responses while maintaining flexibility. Let's explore how to implement these concepts in Python in the Anthropic API.
 
 We start with setting up traditional text generation with Anthropic's Claude API. We will think about what makes a good schema and exploit prompt engineering to guide the model towards the desired output format. After a few experiments with prompt-engineering we will explore two more advanced techniques to enforce structured generation: assistant response prefilling and function calling.
 
