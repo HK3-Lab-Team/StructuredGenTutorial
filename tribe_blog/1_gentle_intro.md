@@ -65,14 +65,49 @@ User: "What's the status of my order #12345?"
 LLM: "I've checked your order #12345, and it's currently in transit. It was shipped yesterday and is expected to arrive within 3-5 business days. Is there anything else I can help you with?"
 ```
 
-Processing this response would require complex parsing:
+Processing this response would require complex parsing with custom regex for each attribute of the response:
 
 ```python
-def process_unstructured_response(response: str):
-    # Complex parsing logic here
-    pass
+import re
 
-process_unstructured_response(LLM_response)
+def process_unstructured_response(response: str):
+    """Only working for the specific example"""
+    # Extract order number
+    order_number_match = re.search(r'order #(\d+)', response)
+    order_number = order_number_match.group(1) if order_number_match else None
+
+    # Extract status
+    status_match = re.search(r"it's currently ([\w\s]+)", response)
+    status = status_match.group(1) if status_match else None
+
+    # Extract shipping information
+    shipped_match = re.search(r'It was shipped (\w+)', response)
+    shipped_date = shipped_match.group(1) if shipped_match else None
+
+    # Extract estimated delivery time
+    delivery_match = re.search(r'expected to arrive within (\d+-\d+) (\w+)', response)
+    if delivery_match:
+        delivery_time = delivery_match.group(1)
+        delivery_unit = delivery_match.group(2)
+    else:
+        delivery_time = None
+        delivery_unit = None
+
+    return {
+        "order_number": order_number,
+        "status": status,
+        "shipped_date": shipped_date,
+        "estimated_delivery": f"{delivery_time} {delivery_unit}" if delivery_time and delivery_unit else None
+    }
+
+# Test the function
+response = "I've checked your order #12345, and it's currently in transit. It was shipped yesterday and is expected to arrive within 3-5 business days. Is there anything else I can help you with?"
+result = process_unstructured_response(response)
+print(result)
+
+```
+```
+{'order_number': '12345', 'status': 'in transit', 'shipped_date': 'yesterday', 'estimated_delivery': '3-5 business'}
 ```
 
 #### Example 2: With structured generation.
