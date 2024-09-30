@@ -2,7 +2,9 @@
 
 ## Building Reproducible LLM Applications
 
-This is the first article in a series that introduces structured generation, a paradigm aimed at reducing the unpredictability of LLMs by ensuring that their outputs adhere to predefined formats. As part of this framework, the tutorial will cover the general idea of structured generation, and how it can be implemented in Python using Anthropic's Large Language Models (LLMs) inference API and the Pydantic library. We hope this short series will help you clear your doubts about LLM unreliability and set the ground for building more reliable LLM applications.
+This is the first article in a series that introduces structured generation, a paradigm aimed at reducing the unpredictability of LLMs by ensuring their outputs adhere to predefined formats. The tutorials will cover the general idea of structured generation and how to implement it in Python using Anthropic's Large Language Models (LLMs) inference API and the Pydantic library for schema generation and validation. We hope this short series will help clarify doubts about LLM reliability and lay the groundwork for building more dependable LLM applications.
+
+This post introduces structured generation, an approach to improve LLM reliability by guiding outputs to follow predefined formats. We'll start by gently reviewing the basic concepts, then jump into a practical example of guiding Anthropic's Claude 3.5 Sonnet model to output structured data in different formats. In follow-up tutorials, we'll explore more advanced ways to guide the model using assistant response prefilling and function calling, as well as how to conveniently generate and validate schemas using the Pydantic library. The final blog post will develop a complete example of legal text classification.
 
 **Enrica Troiano¹ and Tommaso Furlanello¹²**
 
@@ -13,16 +15,25 @@ This is the first article in a series that introduces structured generation, a p
 
 ## Abstract
 
-This post introduces structured generation, an approach aimed at improving the reliability of Large Language Models (LLMs) by guiding their outputs to follow predefined formats. We'll explore practical techniques using the Pydantic Python library to represent and validate data structures. You'll see how these tools can be applied to LLM outputs, adding a layer of safety before using them in critical processes. We'll also demonstrate how combining Pydantic with Anthropic's Claude API can further enhance LLM reliability through output preconditioning. Our goal is to equip you with concrete strategies, grounded in theoretical understanding of LLMs, to build more dependable LLM-powered applications.
 
-Since December 2022, a new generation of large language models (LLMs) has demonstrated remarkable capabilities, sparking excitement about their potential to revolutionize various industries. These models exhibit human-like language skills and possess extensive knowledge across many domains. As a result, LLMs are now being integrated into numerous enterprise workflows, assisting with tasks such as content generation, data analysis, and decision-making.
+Since December 2022, a new generation of large language models (LLMs) has demonstrated remarkable capabilities, sparking excitement about their potential to revolutionize various industries. These models exhibit human-like language skills and possess extensive knowledge across many domains, leading to their integration into numerous enterprise workflows for tasks like content generation, data analysis, and decision-making.
 
-However, the very feature that makes LLMs so powerful - their ability to generate human-like text - also presents challenges. While this capability is invaluable for processing unstructured data, it often produces verbose outputs that require human interpretation. Consequently, many early LLM applications have focused primarily on generating content for human readers rather than machine consumption.
+However, the very feature that makes LLMs so powerful - their ability to generate human-like text - also presents challenges when integrating them into enterprise systems. The inconsistency and unpredictability of their outputs can be particularly problematic.
 
-Whoever has used Claude, the Anthropic's powered LLM-powered virtual assistant, knows that it can give different answers when asked the same question repeatedly. Even the format of the answers doesn't always align with the users' expectations: often, a direct yes-or-no question is met with an elaborate explanation, questions expecting a digit (e.g., `6`) elicit responses in string form ("six"). Of course this is not a problem for a human reader, whose mental representation of a number is unfazed by typing details. But when Chatbots are connected to other systems, a classical example being the integration between ChatGPT and DALL-E 2, the lack of consistency in the output format can be a dealbreaker. 
-Virtually every user has been baffled at least once when asking for a creative generation and instead of receiving the image we asked for, we get a textual description of what that image could look like. 
+Anyone who has used Claude, Anthropic's LLM-powered virtual assistant, knows that it can provide different answers when asked the same question multiple times. Moreover, the format of the answers doesn't always align with users' expectations:
 
-Considering the growing need for more predictable LLMs, this blog post discusses *structured generation*, a paradigm that enables users to guide a LLM's output generation process. First, we'll introduce the intuition behind this paradigm and the concept of JSON schema. Then, we show two methods to implement structured generation with Anthropic's Claude API: assistant response prefilling and function calling. Finally, we'll see how the Python library Pydantic offers powerful tools to convert Python objects into JSON schemas and how to validate LLMs' outputs against these schemas before transforming them into Python objects.
+- A direct yes-or-no question might be met with an elaborate explanation
+- Questions expecting a digit (e.g., `6`) may elicit responses in string form ("six")
+
+While this inconsistency isn't typically problematic for human readers, it can become a significant issue when chatbots are integrated with other systems that require consistent output formats.
+
+A classic example of this challenge is the integration between ChatGPT and DALL-E 2. Many users have experienced requesting an image generation, only to receive a textual description rather than the actual image they asked for.
+
+These scenarios highlight the need for more structured and predictable outputs from LLMs, especially in applications where consistent formatting is crucial for seamless integration with other systems or processes. This is where the concept of structured generation comes into play, offering a solution to guide LLM outputs into more predictable and usable formats.
+
+This blog post introduces structured generation, an approach aimed at improving the reliability and consistency of Large Language Model (LLM) outputs. We'll explore the core concepts behind this paradigm, including the use of JSON schemas to define output structures. The post will demonstrate how to implement structured generation using Anthropic's Claude API, focusing on techniques like prompt engineering and providing examples in different formats (Python dictionaries, JSON, and YAML). We'll also discuss how these structured outputs can be parsed and utilized in practical applications. 
+
+In future tutorials, we'll review more advanced methods such as assistant response prefilling and function calling, as well as how to leverage the Python library Pydantic for schema generation and output validation.
 
 ## A GENTLE INTRODUCTION TO STRUCTURED GENERATION
 
