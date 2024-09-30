@@ -267,15 +267,10 @@ Claude response: A JSON schema is a declarative format for describing the struct
 ```
 This is how we access the LLM's responses. 
 ### 3. Using the System Prompt to Guide the Output Format
-We now want to obtain more structured outputs.
- We will pose the same question on the JSON schema, but this time we will provide the model with an example of the desired output format directly in the prompt, separately including an example Python dictionary, a JSON string and a YAML string.
+We now want to obtain more structured outputs, for instance
+a response that contains a topic, citations and a short answer. So we pose the same question on the JSON schema, but this time we provide the model with an example of the desired output format directly in the prompt, separately including an example Python dictionary, a JSON string and a YAML string.
 
-Anthropic's models are trained to receive instructions through the system prompt, which is a message that is prepended to the user's message and sent along with it to help guide the model's response. In order to access the system prompt, we use the `system` argument in the `messages.create` function. 
-
-
-Imagine we wanted our structured response to contain a topic, citations and a short answer. 
-
-For the model to be able and output a Python dictionary, we provide the following example:
+For the model to be able and output a Python dictionary, we include the following example in the prompt:
 1. Python Dictionary:
 ```python
 example_dictionary = {
@@ -284,13 +279,13 @@ example_dictionary = {
     "answer": "The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed."
 }
 ```
-Dictionaries are native Python data structures. They are easy to work with in Python code but not easily interchangeable with other programming languages. A more exchangeable format is:
+Dictionaries are native Python data structures. They are easy to work with in Python, but not easily interchangeable with other programming languages. A more exchangeable format is:
 
 2. JSON (JavaScript Object Notation):
 ```python
 example_json_string = '{"topic": "zip format", "citations": [{"citation_number": 1, "source": "https://example.com"}], "answer": "The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed."}'
 ```
-JSON is easy for humans to read and write, and easy for machines to parse and generate. It's language-independent and widely used for API responses and configuration files. Finally, a more human-friendly format is:
+JSON is easy for humans to read and write, and easy for machines to parse and generate. It's language-independent and widely used for API responses and configuration files. An even more human-friendly format is:
 
 3. YAML (YAML Ain't Markup Language):
 ```python
@@ -301,9 +296,12 @@ citations:
 answer: The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed.
 """
 ```
-YAML is data serialization standard, often used for configuration files and in applications where data is stored or transmitted. It is more readable than JSON for complex structures but can be more prone to errors due to its reliance on indentation.
+YAML is data serialization standard, often used for configuration files and in applications where data is stored or transmitted. It is more readable than JSON for complex structures, but can be prone to errors due to its reliance on indentation.
 
-Now, let's use these examples in our prompts:
+Now, let's use these three examples in our prompts.
+
+
+Anthropic's models are trained to receive instructions through the system prompt, which is a message that is prepended to the user's message and sent along with it to help guide the model's response. In order to access the system prompt, we use the `system` argument in the `messages.create` function. 
 
 ```python
 response_list = []
@@ -333,7 +331,7 @@ This will give us the following output in a Python dictionary format:
   "answer": "A JSON schema is a declarative language that allows you to annotate and validate JSON documents, defining the structure, constraints, and documentation of JSON data."
 }
 ```
-Here's the answer from the json string format:
+Here's the answer from the JSON string format:
 
 ```json
 {
@@ -348,7 +346,7 @@ Here's the answer from the json string format:
 }
 ```
 
-And this is the answer from the yaml string format:
+And this is the answer from the YAML string format:
 
 ```yaml
 topic: JSON schema
@@ -360,7 +358,7 @@ citations:
 answer: A JSON schema is a declarative language that allows you to annotate and validate JSON documents, defining the structure, constraints, and documentation of JSON data.
 ```
 
-Now, let's parse each of these responses to demonstrate how we can work with different formats. It's important to note that executing generated Python code can be risky in general. We're only doing this for a simple example and with a safe and reliable model like Claude 3.5 Sonnet. In real-world applications, always validate and sanitize any data before processing.
+Parsing each of these responses demonstrates how we can work with different formats. Note that executing generated Python code can be risky in general. We're only doing this for illustrative purposes, and with a model as safe and reliable as Claude 3.5 Sonnet. In real-world applications, always validate and sanitize any data before processing.
 
 ```python
 import json
@@ -392,9 +390,9 @@ for response, format_type in zip(response_list, ['dict', 'json', 'yaml']):
         print(f"\nFailed to parse {format_type.upper()} response")
 ```
 
-This code demonstrates how to parse each type of response. For the Python dictionary, we use `ast.literal_eval()`. For JSON, we use the built-in `json` module, and for YAML, we use the `pyyaml` library's `safe_load()` function.
+This code shows how to parse each type of response. For the Python dictionary, we use `ast.literal_eval()`. For JSON, we use the built-in `json` module, and for YAML, we use the `pyyaml` library's `safe_load()` function.
 
-By using these different formats and parsing methods, we can see how structured generation can produce outputs that are not only human-readable but also easily processable by machines. This flexibility is what allows us to integrate LLM outputs into broader workflows.
+By using these different formats and parsing methods, structured generation produces outputs that are not only human-readable, but also easily processable by machines. This flexibility is what allows us to integrate LLM outputs into broader workflows.
 
 As a final example, we will process a larger list of file formats, create a dictionary of their responses indexed by the topic with answers as values, and save it to disk as a JSON file.
 
@@ -428,19 +426,35 @@ with open('file_formats_info.json', 'w') as f:
 print("File format information has been saved to file_formats_info.json")
 ```
 
-Overall, for simple tasks like the one above, prompt engineering is an efficient strategyto guide the model towards the desired output format. 
+Overall, for simple tasks like the one above, prompt engineering proves an efficient strategy to guide the model towards the desired output format. 
 
 ## Conclusion
 
-In this tutorial, we've demonstrated a practical implementation of structured generation via prompt engineering. Using Anthropic's Claude API, we have successfully steered LLM outputs into predefined formats (Python dictionaries, JSON, and YAML), which enhance the reliability and usability of AI-generated content in various applications.
+In this tutorial, we've presented a practical implementation of structured generation via prompt engineering. Using Anthropic's Claude API, we have successfully steered LLM outputs into predefined formats (Python dictionaries, JSON, and YAML).
 
 Key takeaways:
-1. Structured generation addresses the challenge of inconsistent LLM outputs, crucial for integrating AI into enterprise systems.
+1. Structured generation addresses the challenge of inconsistent LLM outputs, as a crucial step for integrating AI into enterprise systems.
 2. Combining prompt engineering with structured generation techniques offers fine-grained control over model responses.
-3. Different output formats (Python dict, JSON, YAML) cater to various use cases and integration needs.
-4. Parsing and processing structured outputs enables seamless incorporation into existing workflows.
+3. Different output formats (Python dict, JSON, YAML) cater to various use cases and system integration needs.
+4. Parsing and processing structured outputs enables seamless incorporation into broader workflows.
 
-As we advance in this series, we'll look deeper into more sophisticated techniques like assistant response prefilling, function calling, and leveraging Pydantic for schema generation and validation. These advanced methods will further refine our ability harness the full potential of LLMs while maintaining the consistency and reliability required for production-grade systems. 
+As we advance in this series, we'll look into more sophisticated techniques like assistant response prefilling, function calling, and we'll leverage Pydantic for schema generation and validation. These methods will further refine our ability harness the full potential of AI-generated content, while maintaining the consistency and reliability required for production-grade systems. 
+
+
+## Learning More
+
+Here are some valuable resources on structured generation and related topics:
+
+1. **[Anthropic Cookbook](https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb)**: Explore practical examples of using Claude for structured JSON data extraction. The cookbook covers tasks like summarization, entity extraction, and sentiment analysis, from basic implementations to advanced use cases.
+
+2. **[Instructor Library](https://jxnl.github.io/instructor/)**: A powerful tool for generating structured outputs with LLMs, built on top of Pydantic.
+
+3. **[Outlines Library](https://github.com/dottxt-ai/outlines)**: An open-source implementation for structured generation with multiple model integrations.
+
+
+4. **[Pydantic Documentation](https://docs.pydantic.dev/)**: For in-depth information on schema generation and validation.
+
+___
 
 If you found this tutorial helpful, please consider showing your support:
 
@@ -449,37 +463,3 @@ If you found this tutorial helpful, please consider showing your support:
 3. Follow us on Twitter:
    - [@hyp_enri](https://twitter.com/hyp_enri)
    - [@cyndesama](https://twitter.com/cyndesama)
-
-We're excited to continue the next chapter of this series on Schema Engineering, explaining advanced techniques like assistant response prefilling, function calling, and integrating Pydantic for more complex structured generation tasks. 
-
-
-
-
-
-## Learning More
-
-Here are some valuable resources to deepen your understanding of structured generation and related topics:
-
-1. **Anthropic Cookbook**: Explore practical examples of using Claude for structured JSON data extraction. The cookbook covers tasks like summarization, entity extraction, and sentiment analysis:
-   [Extracting Structured JSON with Claude](https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb)
-
-2. **Instructor Library**: A powerful tool for generating structured outputs with LLMs, built on top of Pydantic:
-   [Instructor Documentation](https://jxnl.github.io/instructor/)
-   
-   Key features:
-   - Support for multiple LLM models (GPT-3.5, GPT-4, GPT-4-Vision, Mistral/Mixtral, Anyscale, Ollama, llama-cpp-python)
-   - Simplifies management of validation context and retries
-   - Enables streaming of Lists and Partial responses
-
-3. **[Outlines Library](https://github.com/dottxt-ai/outlines)**: An open-source implementation for structured generation with notable features:
-   - Multiple model integrations (OpenAI, transformers, llama.cpp, exllama2, mamba)
-   - Prompting primitives based on Jinja templating
-   - Support for multiple choices, type constraints, and dynamic stopping
-   - Fast regex and JSON generation
-   - Grammar-structured generation
-   - Python function interleaving with completions
-   - Caching and batch inference capabilities
-
-4. **[Pydantic Documentation](https://docs.pydantic.dev/)**: For in-depth information on schema generation and validation.
-
-These resources provide an overview of structured generation techniques, from basic implementations to advanced use case.
