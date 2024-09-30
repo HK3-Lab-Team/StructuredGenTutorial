@@ -205,7 +205,7 @@ if key is None:
 ```
 
 
-Assuming that you have set up the key properly, you are ready to import the Anthropic library and initialize the client with our API key.
+Assuming that you have set up the key properly, you are ready to import the Anthropic library and initialize the client with your API key.
 ```python
 import anthropic
 from dotenv import load_dotenv
@@ -443,23 +443,23 @@ As we advance in this series, we'll look into more sophisticated techniques like
 
 ## Learning More
 
-Here are some valuable resources on structured generation and related topics:
+Here are some valuable resources on structured generation and related topics.
 
-1. **[Anthropic Cookbook](https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb)**: Explore practical examples of using Claude for structured JSON data extraction. The cookbook covers tasks like summarization, entity extraction, and sentiment analysis, from basic implementations to advanced use cases.
+- **[Anthropic Cookbook](https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb)**: Explore practical examples of using Claude for structured JSON data extraction. The cookbook covers tasks like summarization, entity extraction, and sentiment analysis, from basic implementations to advanced use cases.
 
-2. **[Instructor Library](https://jxnl.github.io/instructor/)**: A powerful tool for generating structured outputs with LLMs, built on top of Pydantic.
+- **[Instructor Library](https://jxnl.github.io/instructor/)**: A powerful tool for generating structured outputs with LLMs, built on top of Pydantic.
 
-3. **[Outlines Library](https://github.com/dottxt-ai/outlines)**: An open-source implementation for structured generation with multiple model integrations.
+- **[Outlines Library](https://github.com/dottxt-ai/outlines)**: An open-source implementation for structured generation with multiple model integrations.
 
 
-4. **[Pydantic Documentation](https://docs.pydantic.dev/)**: For in-depth information on schema generation and validation.
+- **[Pydantic Documentation](https://docs.pydantic.dev/)**: For in-depth information on schema generation and validation.
 
 ___
 
 If you found this tutorial helpful, please consider showing your support:
 
-1. Star our GitHub repository: [StructuredGenTutorial](https://github.com/HK3-Lab-Team/StructuredGenTutorial)
-2. Stay tuned for our next blog post on [tribe.ai/blog](https://www.tribe.ai/blog)
-3. Follow us on Twitter:
+- Star our GitHub repository: [StructuredGenTutorial](https://github.com/HK3-Lab-Team/StructuredGenTutorial)
+- Stay tuned for our next blog post on [tribe.ai/blog](https://www.tribe.ai/blog)
+- Follow us on Twitter:
    - [@hyp_enri](https://twitter.com/hyp_enri)
    - [@cyndesama](https://twitter.com/cyndesama)
