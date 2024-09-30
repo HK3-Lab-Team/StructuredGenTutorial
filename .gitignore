@@ -3,3 +3,5 @@
 .blogsvenv/pyvenv.cfg
 .blogsvenv/lib/python3.12/site-packages/pip/_vendor/vendor.txt
 /.blogsvenv
+.env
+/.venv

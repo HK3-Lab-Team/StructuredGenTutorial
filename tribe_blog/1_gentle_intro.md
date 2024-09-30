@@ -24,9 +24,7 @@ Considering the growing need for more predictable LLMs, this blog post discusses
 
 ## A GENTLE INTRODUCTION TO STRUCTURED GENERATION
 
-Structured generation is an approach to specify our expectations for LLMs. This is achieved with a class of coding techniques that serve to put constraints on the structure of the LLMs' outputs.  
 
-### CORE IDEAS
 
 The rationale behind the use of output constraints is to narrow the possible LLM's answers down to the answers that have certain characteristics. That way, we maintain control over complex applications using LLMs, because we force the responses to have a format that is consistent with the expectations of our systems. For example, in a customer support chatbot, we may require a response composed of two parts, one that is a direct answer for the customer's question, and the other that offers a detailed log and explanation for the company's database. Let's look at two examples to illustrate this:
 
@@ -112,3 +110,243 @@ To implement structured generation effectively, we focus on two main aspects:
 
 These components work together to create a robust framework for generating structured outputs from LLMs. By leveraging both traditional prompt engineering and structured generation techniques, we can exert fine-grained control over the model's responses while maintaining flexibility. Let's explore how to implement these concepts in Python in the Anthropic API.
 
+## Obtaining Structured Outputs with Anthropic's Claude API
+
+We start with setting up traditional text generation with Anthropic's Claude API. We will think about what makes a good schema and exploit prompt engineering to guide the model towards the desired output format. After a few experiments with prompt-engineering we will explore two more advanced techniques to enforce structured generation: assistant response prefilling and function calling.
+
+Let's start by setting up our environment and installing the anthropic library. First in the terminal we install the anthropic library and set up our API key.
+
+```bash
+pip install anthropic
+```
+If you do not have an API key, you can obtain one by registering for an account on the [Anthropic API](https://console.anthropic.com/settings/api-keys).
+To set up our API key in a secure way have two alternatives either register to the global environment variable or store the key in a .env file and load it using the python library `python-dotenv`. Which can be installed with the following command
+
+```bash
+pip install python-dotenv
+```
+If you are following the tutorial from the cloned github repository, you can find the .env.copy file in the root of the repository, rename it to .env after editing it with your API key. Otherwise, you can create the file yourself and add the following line
+
+```bash
+ANTHROPIC_API_KEY='YOUR_API_KEY'
+```
+
+In case we choose to register to the global environment variable we run the following command in the terminal
+
+```bash
+export ANTHROPIC_API_KEY='YOUR_API_KEY'
+```
+Now in python to check that everything is working we can run the following code using dotenv
+
+```python
+from dotenv import load_dotenv
+import os
+load_dotenv()
+key = os.environ["ANTHROPIC_API_KEY"]
+if key is None:
+    raise ValueError("Error: ANTHROPIC_API_KEY not found")
+```
+
+or if using directly the global environment simply:
+
+```python
+import os
+key = os.environ["ANTHROPIC_API_KEY"]
+if key is None:
+    raise ValueError("Error: ANTHROPIC_API_KEY not found")
+```
+
+Finally we are ready to import the anthropic library and initialize the client with our API key.
+```python
+import anthropic
+from dotenv import load_dotenv
+import os
+load_dotenv()
+key = os.environ["ANTHROPIC_API_KEY"]
+if key is None:
+    raise ValueError("Error: ANTHROPIC_API_KEY not found")
+client = anthropic.Anthropic(
+    api_key=key,
+)
+```
+
+For all our examples we will use Claude 3.5 Sonnet model which has been extensively trained on structured generation tasks and is highly versatile across different structures like JSON, YAML, XML and CSV. The latest model version at the moment of writing is `claude-3-5-sonnet-20240620`. 
+
+Let's start with a simple example where we ask the model what is a JSON schema, to test that everything is properly installed and that the API key is working.
+
+```python
+response = client.messages.create(
+    model="claude-3-5-sonnet-20240620",
+    max_tokens=200,
+    messages=[
+        {"role": "user", "content": "What is a JSON schema in a sentence?"}
+    ],
+)
+```
+will lead to a `Message` object with the following structure:
+```
+Message = {
+    "id": str,
+    "content": [
+        {
+            "text": str,
+            "type": str
+        }
+    ],
+    "model": str,
+    "role": str,
+    "stop_reason": str,
+    "stop_sequence": None,  # or potentially str
+    "type": str,
+    "usage": {
+        "input_tokens": int,
+        "output_tokens": int
+    }
+}
+```
+In order to extract the text content of the message we can index into the content key treating it as a python dictionary.
+
+```python
+text_response = response.content[0].text
+print(f"Claude response: {text_response}")
+```
+```
+Claude response: A JSON schema is a declarative format for describing the structure, content, and validation rules of JSON data.
+```
+
+Now let's see how we can improve our prompt to make the model response more structured by simply adding examples of the desired output format. Anthropic's models are trained to receive instructions through the system prompt, which is a message that is prepended to the user's message and sent along with it, which helps guide the model's response. In order to access the system prompt we use the `system` argument in the `messages.create` function. And we will specify the format using different examples for the desired output format: a Python dictionary, a JSON schema and a YAML schema. 
+
+[Previous content remains the same up to the schema examples]
+
+Let's start by defining our three examples schemas. We want our response to contain a topic, citations and a short answer. Let's insist on the JSON schema definition and write down three output examples describing what .zip format is, using different formats: Python dictionary, JSON, and YAML.
+
+1. Python Dictionary:
+```python
+example_dictionary = {
+    "topic": "zip format",
+    "citations": [{"citation_number": 1, "source": "https://example.com"}],
+    "answer": "The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed."
+}
+```
+This is a native Python data structure. It's easy to work with in Python code but isn't as easily interchangeable with other programming languages.
+
+2. JSON (JavaScript Object Notation):
+```python
+example_json_string = '{"topic": "zip format", "citations": [{"citation_number": 1, "source": "https://example.com"}], "answer": "The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed."}'
+```
+JSON is a lightweight data interchange format that is easy for humans to read and write and easy for machines to parse and generate. It's language-independent and widely used for API responses and configuration files.
+
+3. YAML (YAML Ain't Markup Language):
+```python
+example_yaml_string = """topic: zip format
+citations:
+  - citation_number: 1
+    source: https://example.com
+answer: The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed.
+"""
+```
+YAML is a human-friendly data serialization standard. It's often used for configuration files and in applications where data is being stored or transmitted. YAML is more readable than JSON for complex structures but can be more prone to errors due to its reliance on indentation.
+
+Now, let's use these examples in our prompts:
+
+```python
+response_list = []
+for example in [example_dictionary, example_json_string, example_yaml_string]:
+    response = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        system=f"You are a helpful assistant that responds in the same format as the following example: {example}",
+        messages=[
+            {"role": "user", "content": "What is a JSON schema in a sentence?"}
+        ],
+        max_tokens=200,
+    )
+    response_list.append(response.content[0].text)
+    print(f"Claude response: {response.content[0].text}")
+```
+Which will give us the following output following a python dictionary format:
+
+```python
+{
+  "topic": "JSON schema",
+  "citations": [
+    {
+      "citation_number": 1,
+      "source": "https://json-schema.org/understanding-json-schema/"
+    }
+  ],
+  "answer": "A JSON schema is a declarative language that allows you to annotate and validate JSON documents, defining the structure, constraints, and documentation of JSON data."
+}
+```
+From the json string format:
+
+```json
+{
+  "topic": "JSON schema",
+  "citations": [
+    {
+      "citation_number": 1,
+      "source": "https://json-schema.org/understanding-json-schema/"
+    }
+  ],
+  "answer": "A JSON schema is a declarative language that allows you to annotate and validate JSON documents, defining the structure, constraints, and documentation of JSON data."
+}
+```
+
+And from the yaml string format:
+
+```yaml
+topic: JSON schema
+
+citations:
+  - citation_number: 1
+    source: https://json-schema.org/understanding-json-schema/
+
+answer: A JSON schema is a declarative language that allows you to annotate and validate JSON documents, defining the structure, constraints, and documentation of JSON data.
+```
+
+Now, let's parse each of these responses to demonstrate how we can work with different formats. It's important to note that executing generated Python code can be dangerous in general. We're only doing this for a simple example and with a safe and reliable model like Claude 3.5 Sonnet. In real-world applications, always validate and sanitize any data before processing.
+
+```python
+import json
+import yaml
+import ast
+
+def parse_response(response, format_type):
+    try:
+        if format_type == 'dict':
+            # WARNING: ast.literal_eval is safer than eval, but still use caution
+            return ast.literal_eval(response)
+        elif format_type == 'json':
+            return json.loads(response)
+        elif format_type == 'yaml':
+            return yaml.safe_load(response)
+    except Exception as e:
+        print(f"Error parsing {format_type} response: {e}")
+        return None
+
+# Parse and print each response
+for response, format_type in zip(response_list, ['dict', 'json', 'yaml']):
+    parsed = parse_response(response, format_type)
+    if parsed:
+        print(f"\nParsed {format_type.upper()} response:")
+        print(f"Topic: {parsed.get('topic')}")
+        print(f"Citation: {parsed.get('citations')[0] if parsed.get('citations') else 'No citation'}")
+        print(f"Answer: {parsed.get('answer')}")
+    else:
+        print(f"\nFailed to parse {format_type.upper()} response")
+```
+
+This code demonstrates how to safely parse each type of response. For the Python dictionary, we use `ast.literal_eval()` which is safer than `eval()` but still should be used cautiously. For JSON, we use the built-in `json` module, and for YAML, we use the `pyyaml` library's `safe_load()` function.
+
+By using these different formats and parsing methods, we can see how structured generation can produce outputs that are not only human-readable but also easily processable by machines. This flexibility allows us to integrate LLM outputs into various systems and workflows, enhancing the utility of AI-generated content in practical applications.
+
+
+
+
+
+## Learning More
+
+Link to anthropic docs and cookbooks.
+Link to instructror library
+Link to outlines library and state machines paper
+Link to Pydantic docs
