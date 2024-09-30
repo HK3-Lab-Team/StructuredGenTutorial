@@ -6,14 +6,11 @@
 Welcome to our short series of articles on structured generation, a paradigm designed to reduce the unpredictability of large language models (LLMs) by ensuring that their outputs adhere to predefined formats. 
 
 The goal of the series is to show how structured generation can be implemented in Python using Anthropic's LLMs inference API. 
-As a first step, this post will introduce the basic concepts behind structured generation and walk you through a practical example where Anthropic's Claude 3.5 Sonnet model is guided to produce structured data in many formats. You can find the raw markdown file for the post and the complete code for the examples in our [github repository](https://github.com/HK3-Lab-Team/StructuredGenTutorial). To run the code yourself, simply clone the repository and execute the Jupyter notebook [gentle-intro.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/gentle-intro.ipynb).
+As a first step, this post introduces the basic concepts behind structured generation. In addition, it provides a practical example that guides Anthropic's Claude 3.5 Sonnet model to produce structured data in many formats. 
 
-In follow-up tutorials, we will explore more advanced techniques for structured generation using assistant response prefilling and function calling. We’ll also demonstrate how to generate and validate schemas efficiently with the Python Pydantic library. We will wrap up the series with a complete example of legal text classification. 
+In follow-up tutorials, we will explore assistant response prefilling and function calling, as more advanced techniques for structured generation. We’ll also demonstrate how to generate and validate schemas efficiently with the Python Pydantic library. We will wrap up the series with a complete example of legal text classification. 
 
 By the end of it, you will have gained concrete strategies for building more robust LLM-powered applications, and a theoretical understanding of LLMs, with a particular focus on their (un)reliability. 
-
-
-
 
 **Enrica Troiano¹ and Tommaso Furlanello¹²**
 
@@ -21,6 +18,10 @@ By the end of it, you will have gained concrete strategies for building more rob
 ² Tribe AI
 
 **Correspondence:** {name}.{surname}@hk3lab.ai
+___
+You can find the raw markdown file for the post and the complete code for the examples in our [github repository](https://github.com/HK3-Lab-Team/StructuredGenTutorial). To run the code yourself, simply clone the repository and execute the Jupyter notebook [gentle-intro.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/gentle-intro.ipynb).
+___
+
 
 ## Motivation
 
@@ -30,20 +31,13 @@ feature at the same time buddies to chat with and powerful tools to lead industr
 
 As a matter of fact, the first LLM-powered applications focused on content generation for human consumption, and today they represent a key workforce in many enterprises, aiding activities like data analysis and decision-making. However, the very feature that makes LLMs so powerful - their ability to generate human-like text - also presents challenges when integrating them into enterprise systems. The inconsistency and unpredictability of their outputs can be particularly problematic.
 
-Anyone who has used Claude, Anthropic's LLM-powered virtual assistant, knows that it can provide different answers when asked the same question multiple times. Moreover, the format of the answers doesn't always align with users' expectations:
-
-- A direct yes-or-no question might be met with an elaborate explanation
-- Questions expecting a digit (e.g., `6`) may elicit responses in string form ("six")
-
+Anyone who has used Claude, Anthropic's LLM-powered virtual assistant, knows that it can provide different answers when asked the same question multiple times. Moreover, the format of the answers doesn't always align with users' expectations: a direct yes-or-no question might be met with an elaborate explanation, and questions expecting a digit (e.g., `6`) may elicit responses in string form ("six").
 While this inconsistency isn't typically problematic for human readers, it can become a significant issue when chatbots are integrated with other systems that require consistent output formats.
 
-A classic example of this challenge is the integration between ChatGPT and DALL-E 2. Many users have experienced requesting an image generation, only to receive a textual description rather than the actual image they asked for.
 
 These scenarios highlight the need for more structured and predictable outputs from LLMs, especially in applications where consistent formatting is crucial for seamless integration with other systems or processes. This is where the concept of structured generation comes into play, offering a solution to guide LLM outputs into more predictable and usable formats.
 
-This blog post introduces structured generation, an approach aimed at improving the reliability and consistency of Large Language Model (LLM) outputs. We'll explore the core concepts behind this paradigm, including the use of JSON schemas to define output structures. The post will demonstrate how to implement structured generation using Anthropic's Claude API, focusing on techniques like prompt engineering and providing examples in different formats (Python dictionaries, JSON, and YAML). We'll also discuss how these structured outputs can be parsed and utilized in practical applications. 
 
-In future tutorials, we'll review more advanced methods such as assistant response prefilling and function calling, as well as how to leverage the Python library Pydantic for schema generation and output validation.
 
 ## A GENTLE INTRODUCTION TO STRUCTURED GENERATION
 
@@ -55,7 +49,7 @@ The rationale behind the use of output constraints is to narrow the possible LLM
 Somewhat implicitly, we already exert that control as soon as we prompt a model with our queries: a prompt is the input condition that determines what tokens the model returns, i.e., what answer (from the space all possible answers) is appropriate to the user's input. But finding a prompt that elicits the desired output format can be a long trial-and-error process. We must experiment with prompt variations and see if the model's responses change accordingly. We may eventually find the prompt that works the best for a specific task, but we have no guarantee it will lead to the desired output format systematically. 
 
 Structured generation complements and enhances prompt engineering, offering a more systematic approach to controlling LLM outputs. 
-Let's look at two examples to illustrate this.
+Let's look at two examples to illustrate its potential.
 
 #### Example 1: Without enforcing syntax.
 
@@ -110,6 +104,8 @@ print(result)
 {'order_number': '12345', 'status': 'in transit', 'shipped_date': 'yesterday', 'estimated_delivery': '3-5 business'}
 ```
 
+In this example, the LLM provides a human-friendly response that answers the question but doesn't follow any particular structure. This is fine for direct human interaction but can be challenging for automated systems to parse and process.
+
 #### Example 2: With structured generation.
 
 ```
@@ -148,9 +144,8 @@ def save_to_database(log: dict):
 process_structured_response(LLM_response)
 ```
 
-In the first example, the LLM provides a human-friendly response that answers the question but doesn't follow any particular structure. This is fine for direct human interaction but can be challenging for automated systems to parse and process.
 
-In the second example, which uses structured generation, the LLM's response is formatted in a specific JSON structure. This format clearly separates the customer-facing response from the internal log information. The structured output makes it easy for the system to:
+In this example, which uses structured generation, the LLM's response is formatted in a specific JSON structure. The format clearly separates the customer-facing response from the internal log information, which makes it easy for the system to:
 
 1. Extract the customer response for display
 2. Store detailed order information in a database
@@ -168,39 +163,38 @@ To implement structured generation effectively, we focus on two main aspects:
 
 2. Validation and processing: We implement mechanisms to validate the model's output against our defined schema, ensuring it meets our criteria before further processing or merging into other systems.
 
-These components work together to create a robust framework for generating structured outputs from LLMs. 
-
-
+These components work together to create a robust framework for generating structured outputs from LLMs. Let's explore how to implement them with Python in the Anthropic API.
 
 ## Obtaining Structured Outputs via Prompt Engineering with Anthropic's Claude API
 
-Structured generation can be implemented explicitly through careful prompting of the model or implicitly with an algorithm called guided decoding, which manipulates the model generation at each token to enforce the desired structure. By leveraging both, we can exert fine-grained control over the model's responses while maintaining flexibility. Let's explore how to implement these concepts in Python in the Anthropic API.
+Structured generation can be implemented explicitly through careful prompting of the model or implicitly with an algorithm called guided decoding, which manipulates the model generation at each token to enforce the desired structure. By leveraging both, we can exert fine-grained control over the model's responses while maintaining flexibility. 
 
-We start with setting up traditional text generation with Anthropic's Claude API. We will think about what makes a good schema and exploit prompt engineering to guide the model towards the desired output format. After a few experiments with prompt-engineering we will explore two more advanced techniques to enforce structured generation: assistant response prefilling and function calling.
+We will now exploit prompt engineering to guide the model towards the desired output format. After a few experiments, we will use two more advanced techniques to enforce structured generation: assistant response prefilling and function calling.
 
+### Setting Up Our Environment
 Let's start by setting up our environment and installing the anthropic library. First in the terminal we install the anthropic library and set up our API key.
 
 ```bash
 pip install anthropic
 ```
 If you do not have an API key, you can obtain one by registering for an account on the [Anthropic API](https://console.anthropic.com/settings/api-keys).
-To set up our API key in a secure way have two alternatives either register to the global environment variable or store the key in a .env file and load it using the python library `python-dotenv`. Which can be installed with the following command
+To set up our API key in a secure way, either register to the global environment variable or store the key in a .env file and load it using the python library `python-dotenv`, which can be installed with the following command:
 
 ```bash
 pip install python-dotenv
 ```
-If you are following the tutorial from the cloned github repository, you can find the .env.copy file in the root of the repository, rename it to .env after editing it with your API key. Otherwise, you can create the file yourself and add the following line
+If you are following the tutorial from the cloned github repository, you can find the .env.copy file in the root of the repository (please rename it to .env after editing it with your API key). Otherwise, you can create the file yourself and add the following line:
 
 ```bash
 ANTHROPIC_API_KEY='YOUR_API_KEY'
 ```
 
-In case we choose to register to the global environment variable we run the following command in the terminal
+In case we choose to register to the global environment variable we run the following command in the terminal:
 
 ```bash
 export ANTHROPIC_API_KEY='YOUR_API_KEY'
 ```
-Now in python to check that everything is working we can run the following code using dotenv
+Now, back in Python, we check that everything is working we can run the following code using `dotenv`:
 
 ```python
 from dotenv import load_dotenv
@@ -211,7 +205,7 @@ if key is None:
     raise ValueError("Error: ANTHROPIC_API_KEY not found")
 ```
 
-or if using directly the global environment simply:
+Alternatively, if you're using directly the global environment, simply do:
 
 ```python
 import os
@@ -220,7 +214,7 @@ if key is None:
     raise ValueError("Error: ANTHROPIC_API_KEY not found")
 ```
 
-Finally we are ready to import the anthropic library and initialize the client with our API key.
+We are finally ready to import the anthropic library and initialize the client with our API key.
 ```python
 import anthropic
 from dotenv import load_dotenv
@@ -233,10 +227,10 @@ client = anthropic.Anthropic(
     api_key=key,
 )
 ```
+### Testing Anthropic API with Claude 3.5 Sonnet
+For all our examples, we will use Claude 3.5 Sonnet model which has been extensively trained on structured generation tasks and is highly versatile across different structures like JSON, YAML, XML and CSV. The latest model version at the moment of writing is `claude-3-5-sonnet-20240620`. 
 
-For all our examples we will use Claude 3.5 Sonnet model which has been extensively trained on structured generation tasks and is highly versatile across different structures like JSON, YAML, XML and CSV. The latest model version at the moment of writing is `claude-3-5-sonnet-20240620`. 
-
-Let's start with a simple example where we ask the model what is a JSON schema, to test that everything is properly installed and that the API key is working.
+Let's start with a simple example where we ask the model what a JSON schema is, to test that everything is properly installed and that the API key is working.
 
 ```python
 response = client.messages.create(
@@ -247,7 +241,7 @@ response = client.messages.create(
     ],
 )
 ```
-will lead to a `Message` object with the following structure:
+This code snippet will lead to a `Message` object with the following structure:
 ```
 Message = {
     "id": str,
@@ -268,7 +262,7 @@ Message = {
     }
 }
 ```
-In order to extract the text content of the message we can index into the content key treating it as a python dictionary.
+In order to extract the text content of the message, we can index into the content key treating it as a python dictionary.
 
 ```python
 text_response = response.content[0].text
@@ -277,12 +271,15 @@ print(f"Claude response: {text_response}")
 ```
 Claude response: A JSON schema is a declarative format for describing the structure, content, and validation rules of JSON data.
 ```
+### Using the System Prompt to Guide the Output Format
+Now let's try to make the model response more structured by simply adding examples of the desired output format. We will repeat the same example about the JSON schema but this time we will provide the model with a single example of the desired output format, varying between a Python dictionary, a JSON string and a YAML string.
 
-Now let's see how we can improve our prompt to make the model response more structured by simply adding examples of the desired output format. Anthropic's models are trained to receive instructions through the system prompt, which is a message that is prepended to the user's message and sent along with it, which helps guide the model's response. In order to access the system prompt we use the `system` argument in the `messages.create` function. And we will specify the format using different examples for the desired output format: a Python dictionary, a JSON schema and a YAML schema. 
+Anthropic's models are trained to receive instructions through the system prompt, which is a message that is prepended to the user's message and sent along with it to help guide the model's response. In order to access the system prompt, we use the `system` argument in the `messages.create` function. 
 
 
-Let's start by defining our three examples schemas. We want our response to contain a topic, citations and a short answer. Let's insist on the JSON schema definition and write down three output examples describing what .zip format is, using different formats: Python dictionary, JSON, and YAML.
+We want our structured response to contain a topic, citations and a short answer. 
 
+When we want the model to output a Python dictionary we provide the following example:
 1. Python Dictionary:
 ```python
 example_dictionary = {
@@ -291,13 +288,13 @@ example_dictionary = {
     "answer": "The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed."
 }
 ```
-This is a native Python data structure. It's easy to work with in Python code but isn't as easily interchangeable with other programming languages.
+This is a native Python data structure. It's easy to work with in Python code but isn't as easily interchangeable with other programming languages. A more exchangeable format is:
 
 2. JSON (JavaScript Object Notation):
 ```python
 example_json_string = '{"topic": "zip format", "citations": [{"citation_number": 1, "source": "https://example.com"}], "answer": "The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed."}'
 ```
-JSON is a lightweight data interchange format that is easy for humans to read and write and easy for machines to parse and generate. It's language-independent and widely used for API responses and configuration files.
+JSON easy for humans to read and write, and easy for machines to parse and generate. It's language-independent and widely used for API responses and configuration files. Finally, a more human-friendly format is:
 
 3. YAML (YAML Ain't Markup Language):
 ```python
@@ -308,7 +305,7 @@ citations:
 answer: The .zip format is a compressed file format that groups multiple files into a single archive, with the files inside the archive appearing as if they were not compressed.
 """
 ```
-YAML is a human-friendly data serialization standard. It's often used for configuration files and in applications where data is being stored or transmitted. YAML is more readable than JSON for complex structures but can be more prone to errors due to its reliance on indentation.
+YAML is data serialization standard often used for configuration files and in applications where data is being stored or transmitted. It is more readable than JSON for complex structures but can be more prone to errors due to its reliance on indentation.
 
 Now, let's use these examples in our prompts:
 
@@ -326,7 +323,7 @@ for example in [example_dictionary, example_json_string, example_yaml_string]:
     response_list.append(response.content[0].text)
     print(f"Claude response: {response.content[0].text}")
 ```
-Which will give us the following output following a python dictionary format:
+This will give us the following output in a python dictionary format:
 
 ```python
 {
@@ -340,7 +337,7 @@ Which will give us the following output following a python dictionary format:
   "answer": "A JSON schema is a declarative language that allows you to annotate and validate JSON documents, defining the structure, constraints, and documentation of JSON data."
 }
 ```
-From the json string format:
+Here's the answer from the json string format:
 
 ```json
 {
@@ -355,7 +352,7 @@ From the json string format:
 }
 ```
 
-And from the yaml string format:
+And this is the answer from the yaml string format:
 
 ```yaml
 topic: JSON schema
@@ -447,7 +444,7 @@ Key takeaways:
 3. Different output formats (Python dict, JSON, YAML) cater to various use cases and integration needs.
 4. Parsing and processing structured outputs enables seamless incorporation into existing workflows.
 
-As we advance in this series, we'll delve deeper into more sophisticated techniques like assistant response prefilling, function calling, and leveraging Pydantic for schema generation and validation. These advanced methods will further refine our ability to create robust, predictable LLM applications.
+As we advance in this series, we'll look deeper into more sophisticated techniques like assistant response prefilling, function calling, and leveraging Pydantic for schema generation and validation. These advanced methods will further refine our ability to create robust, predictable LLM applications.
 
 By mastering structured generation, developers can harness the full potential of LLMs while maintaining the consistency and reliability required for production-grade systems. This approach paves the way for more innovative and dependable AI-powered solutions across various industries.
 
@@ -470,7 +467,7 @@ We're excited to continue the next chapter of this series on Schema Engineering,
 
 ## Learning More
 
-To deepen your understanding of structured generation and related topics, here are some valuable resources:
+Here are some valuable resources to deepen your understanding of structured generation and related topics:
 
 1. **Anthropic Cookbook**: Explore practical examples of using Claude for structured JSON data extraction. The cookbook covers tasks like summarization, entity extraction, and sentiment analysis:
    [Extracting Structured JSON with Claude](https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb)
@@ -494,4 +491,4 @@ To deepen your understanding of structured generation and related topics, here a
 
 4. **[Pydantic Documentation](https://docs.pydantic.dev/)**: For in-depth information on schema generation and validation.
 
-These resources provide a comprehensive overview of structured generation techniques, from basic implementations to advanced use cases, helping you build more reliable and efficient LLM-powered applications.
+These resources provide an overview of structured generation techniques, from basic implementations to advanced use case.
