@@ -410,8 +410,8 @@ If you found this tutorial helpful, please consider showing your support:
 1. Star our GitHub repository: [StructuredGenTutorial](https://github.com/HK3-Lab-Team/StructuredGenTutorial)
 2. Stay tuned for our next blog post on [tribe.ai/blog](https://www.tribe.ai/blog)
 3. Follow us on Twitter:
-   - [@cyndesama](https://twitter.com/cyndesama)
    - [@hyp_enri](https://twitter.com/hyp_enri)
+   - [@cyndesama](https://twitter.com/cyndesama)
 
 We're excited to continue the next chapter of this series on Schema Engineering, explaining advanced techniques like assistant response prefilling, function calling, and integrating Pydantic for more complex structured generation tasks. 
 
