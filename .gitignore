@@ -5,3 +5,4 @@
 /.blogsvenv
 .env
 /.venv
+*.parquet
