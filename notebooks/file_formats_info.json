@@ -1,0 +1,12 @@
+{
+  "zip file format": "The ZIP file format is a popular compressed archive format that allows multiple files and folders to be bundled together and compressed into a single file for easier storage and transfer.",
+  "tar file format": "The tar file format is an archiving format used to combine multiple files into a single file for easy storage and distribution, without compression by default.",
+  "rar file format": "RAR (Roshal Archive) is a proprietary file format used for data compression and archiving, capable of storing multiple files in a single container with advanced compression algorithms and encryption features.",
+  "7z file format": "The 7z file format is a compressed archive file format that offers high compression ratios and strong AES-256 encryption, developed by Igor Pavlov for use with the 7-Zip archiver.",
+  "ISO file format": "An ISO file is a disk image that contains an exact copy of the data from an optical disc, such as a CD, DVD, or Blu-ray, including the file system and all its contents.",
+  "gz file format": "The .gz file format is a compressed file created using the GNU zip (gzip) compression algorithm, typically used to reduce the size of a single file for storage or faster transmission over networks.",
+  "bz2 file format": "The bz2 file format is a compressed archive file created using the BZIP2 compression algorithm, which offers high compression ratios for single files or groups of files.",
+  "xz file format": "The xz file format is a high-compression, lossless data compression format that uses the LZMA2 compression algorithm to achieve better compression ratios than many other commonly used formats.",
+  "PDF file format": "PDF (Portable Document Format) is a file format developed by Adobe that presents documents in a manner independent of software, hardware, and operating systems, ensuring consistent display across various devices and platforms.",
+  "docx file format": "The .docx file format is a modern Microsoft Word document format that uses XML and ZIP compression to store text, images, formatting, and other document elements in a single file."
+}

@@ -229,7 +229,6 @@ Claude response: A JSON schema is a declarative format for describing the struct
 
 Now let's see how we can improve our prompt to make the model response more structured by simply adding examples of the desired output format. Anthropic's models are trained to receive instructions through the system prompt, which is a message that is prepended to the user's message and sent along with it, which helps guide the model's response. In order to access the system prompt we use the `system` argument in the `messages.create` function. And we will specify the format using different examples for the desired output format: a Python dictionary, a JSON schema and a YAML schema. 
 
-[Previous content remains the same up to the schema examples]
 
 Let's start by defining our three examples schemas. We want our response to contain a topic, citations and a short answer. Let's insist on the JSON schema definition and write down three output examples describing what .zip format is, using different formats: Python dictionary, JSON, and YAML.
 
@@ -353,6 +352,37 @@ This code demonstrates how to safely parse each type of response. For the Python
 
 By using these different formats and parsing methods, we can see how structured generation can produce outputs that are not only human-readable but also easily processable by machines. This flexibility allows us to integrate LLM outputs into various systems and workflows, enhancing the utility of AI-generated content in practical applications.
 
+As a final example we will process a larger list of file formats, create a dictionary of their responses indexed by the topic with answers as values and save it to disk as a JSON file.
+
+```python
+file_formats = [
+    "zip", "tar", "rar", "7z", "iso", "gz", "bz2", "xz", "pdf", "docx"
+]
+
+format_info = {}
+
+for format in file_formats:
+    response = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        system=f"You are a helpful assistant that responds in the same format as the following example: {example_json_string}",
+        messages=[
+            {"role": "user", "content": f"What is the {format} file format in one sentence?"}
+        ],
+        max_tokens=200,
+    )
+    
+    try:
+        parsed_response = json.loads(response.content[0].text)
+        format_info[parsed_response['topic']] = parsed_response['answer']
+    except json.JSONDecodeError:
+        print(f"Error parsing response for {format} format")
+
+# Save the dictionary to a JSON file
+with open('file_formats_info.json', 'w') as f:
+    json.dump(format_info, f, indent=2)
+
+print("File format information has been saved to file_formats_info.json")
+```
 
 
 
