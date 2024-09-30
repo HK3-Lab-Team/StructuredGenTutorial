@@ -6,6 +6,8 @@ This is the first article in a series that introduces structured generation, a p
 
 This post introduces structured generation, an approach to improve LLM reliability by guiding outputs to follow predefined formats. We'll start by gently reviewing the basic concepts, then jump into a practical example of guiding Anthropic's Claude 3.5 Sonnet model to output structured data in different formats. In follow-up tutorials, we'll explore more advanced ways to guide the model using assistant response prefilling and function calling, as well as how to conveniently generate and validate schemas using the Pydantic library. The final blog post will develop a complete example of legal text classification.
 
+You can find the raw markdown file for this blogpost and the complete code for the examples in this [github repository](https://github.com/HK3-Lab-Team/StructuredGenTutorial). If you want to run yourself the code clone the repository and run the following Jupyter notebook: [blog1.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/blog1.ipynb).
+
 **Enrica Troiano¹ and Tommaso Furlanello¹²**
 
 ¹ HK3Lab
@@ -384,12 +386,63 @@ with open('file_formats_info.json', 'w') as f:
 print("File format information has been saved to file_formats_info.json")
 ```
 
+We have seen how for simple tasks like the one above we can use prompt engineering to guide the model towards the desired output format. 
+
+## Conclusion
+
+In this tutorial, we've introduced the concept of structured generation and demonstrated its practical implementation using Anthropic's Claude API. We explored how to guide LLM outputs into predefined formats such as Python dictionaries, JSON, and YAML, enhancing the reliability and usability of AI-generated content in various applications.
+
+Key takeaways:
+1. Structured generation addresses the challenge of inconsistent LLM outputs, crucial for integrating AI into enterprise systems.
+2. Combining prompt engineering with structured generation techniques offers fine-grained control over model responses.
+3. Different output formats (Python dict, JSON, YAML) cater to various use cases and integration needs.
+4. Parsing and processing structured outputs enables seamless incorporation into existing workflows.
+
+As we advance in this series, we'll delve deeper into more sophisticated techniques like assistant response prefilling, function calling, and leveraging Pydantic for schema generation and validation. These advanced methods will further refine our ability to create robust, predictable LLM applications.
+
+By mastering structured generation, developers can harness the full potential of LLMs while maintaining the consistency and reliability required for production-grade systems. This approach paves the way for more innovative and dependable AI-powered solutions across various industries.
+
+
+We hope this tutorial has provided a solid introduction to structured generation using Anthropic's Claude API. By implementing these techniques, you can create more reliable and predictable LLM applications that seamlessly integrate with existing systems.
+
+If you found this tutorial helpful, please consider showing your support:
+
+1. Star our GitHub repository: [StructuredGenTutorial](https://github.com/HK3-Lab-Team/StructuredGenTutorial)
+2. Stay tuned for our next blog post on [tribe.ai/blog](https://www.tribe.ai/blog)
+3. Follow us on Twitter:
+   - [@cyndesama](https://twitter.com/cyndesama)
+   - [@hyp_enri](https://twitter.com/hyp_enri)
+
+We're excited to continue the next chapter of this series on Schema Engineering, explaining advanced techniques like assistant response prefilling, function calling, and integrating Pydantic for more complex structured generation tasks. 
+
+
 
 
 
 ## Learning More
 
-Link to anthropic docs and cookbooks.
-Link to instructror library
-Link to outlines library and state machines paper
-Link to Pydantic docs
+To deepen your understanding of structured generation and related topics, here are some valuable resources:
+
+1. **Anthropic Cookbook**: Explore practical examples of using Claude for structured JSON data extraction. The cookbook covers tasks like summarization, entity extraction, and sentiment analysis:
+   [Extracting Structured JSON with Claude](https://github.com/anthropics/anthropic-cookbook/blob/main/tool_use/extracting_structured_json.ipynb)
+
+2. **Instructor Library**: A powerful tool for generating structured outputs with LLMs, built on top of Pydantic:
+   [Instructor Documentation](https://jxnl.github.io/instructor/)
+   
+   Key features:
+   - Support for multiple LLM models (GPT-3.5, GPT-4, GPT-4-Vision, Mistral/Mixtral, Anyscale, Ollama, llama-cpp-python)
+   - Simplifies management of validation context and retries
+   - Enables streaming of Lists and Partial responses
+
+3. **[Outlines Library](https://github.com/dottxt-ai/outlines)**: An open-source implementation for structured generation with notable features:
+   - Multiple model integrations (OpenAI, transformers, llama.cpp, exllama2, mamba)
+   - Prompting primitives based on Jinja templating
+   - Support for multiple choices, type constraints, and dynamic stopping
+   - Fast regex and JSON generation
+   - Grammar-structured generation
+   - Python function interleaving with completions
+   - Caching and batch inference capabilities
+
+4. **[Pydantic Documentation](https://docs.pydantic.dev/)**: For in-depth information on schema generation and validation.
+
+These resources provide a comprehensive overview of structured generation techniques, from basic implementations to advanced use cases, helping you build more reliable and efficient LLM-powered applications.

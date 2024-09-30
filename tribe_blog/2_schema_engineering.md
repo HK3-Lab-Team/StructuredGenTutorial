@@ -1,3 +1,6 @@
+We'll explore practical techniques using the Pydantic Python library to represent and validate data structures. You'll see how these tools can be applied to LLM outputs, adding a layer of safety before using them in critical processes. We'll also demonstrate how combining Pydantic with Anthropic's Claude API can further enhance LLM reliability through output preconditioning. Our goal is to equip you with concrete strategies, grounded in theoretical understanding of LLMs, to build more dependable LLM-powered applications.
+
+
 ## SCHEMA ENGINEERING
 
 LLMs are trained to produce human-like text, which is fundamentally an unstructured sequence of tokens. In structured generation, we strive for the opposite: we want answers where the information is neatly organized and easy to extract for further processing. It would be ideal, for instance, if the LLM's output strings could be parsed into dictionaries. Keys would represent the structure we desire, and values could be populated with (parts of) the LLM's answers.
