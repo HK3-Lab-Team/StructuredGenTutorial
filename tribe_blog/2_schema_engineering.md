@@ -1,9 +1,33 @@
-We'll explore practical techniques using the Pydantic Python library to represent and validate data structures. You'll see how these tools can be applied to LLM outputs, adding a layer of safety before using them in critical processes. We'll also demonstrate how combining Pydantic with Anthropic's Claude API can further enhance LLM reliability through output preconditioning. Our goal is to equip you with concrete strategies, grounded in theoretical understanding of LLMs, to build more dependable LLM-powered applications.
+# Schema Engineering for Structured Generation with Pydantic
+
+## Building Reproducible LLM Applications
 
 
-## SCHEMA ENGINEERING
+This blog post is a follow-up to our introduction to structured generation. Using Anthropic's Claude API, we showed how to get structured LLM data, where information is neatly organized and easy to extract, instead of an unstructured sequence of token in two steps:
 
-LLMs are trained to produce human-like text, which is fundamentally an unstructured sequence of tokens. In structured generation, we strive for the opposite: we want answers where the information is neatly organized and easy to extract for further processing. It would be ideal, for instance, if the LLM's output strings could be parsed into dictionaries. Keys would represent the structure we desire, and values could be populated with (parts of) the LLM's answers.
+1. defining schemas (i.e., abstractions our preferred structural and typological constraints for the LLM outputs) to pass to a model to
+"manipulate" its text decoding algorithm,
+2. we validate and process the LLM outputs with those schemas.
+
+Previously, we demonstrated this approach using data formats like JSON, YAML, and Python dictionaries. Now, we take it a step further by introducing a Python library that simplifies both schema definition and validation: Pydantic.
+
+**Enrica Troiano¹ and Tommaso Furlanello¹²**
+
+¹ HK3Lab
+² Tribe AI
+
+**Correspondence:** {name}.{surname}@hk3lab.ai
+
+
+
+
+## Schema Engineering
+
+That means that more than brushing up our prompts in natural language, we care about how to spell out our expectations in formal terms. Obviously, posing the right questions still remains important, but we can stop worrying that minimal variations in the words we choose will impact the quality of the LLM's answers, that quality will mostly be influenced by the output schemas we use. 
+
+__representing__ and __validate__ data structures, i.e. our schemas.
+
+ It would be ideal, for instance, if the LLM's output strings could be parsed into dictionaries. Keys would represent the structure we desire, and values could be populated with (parts of) the LLM's answers.
 
 ```python
 # input
@@ -32,7 +56,7 @@ Parsed answers should have no missing values, and all values should be of the ri
 llm_answer = "{Date: nineteenseventysix, Company: \n}"
 ```
 
-To approximate this ideal scenario, we cannot passively accept the LLMs' answers as they are, but we need to "manipulate" the process that underlies their generation. We change the LLMs' text decoding algorithm by using output schemas, abstractions of the structural and typological constraints that we are looking for. First, we define the schemas we prefer, typically writing them down as JSON objects. Then, we pass them on to our models (later we'll see how).
+ciao
 
 ```python
 # WHAT WE MIGHT COMMUNICATE TO THE MODEL
@@ -53,7 +77,16 @@ desired_json_schema = {
 
 Here's the catch of this strategy: communicating a JSON object to the models limits their possible response tokens to those sequences that follow the schema. As a result, we get answers that are more likely parsable into a dictionary matching that schema, i.e., with keys and values that correspond to the schema's properties. For example, `desired_json_schema` can entice a language model to produce `llm_answer_structured`, namely, a string that starts with a left curly bracket, followed by the word "Date", a space, a semicolon, a number and so on, which we can load into `parsed_answer`.
 
-This structured generation approach is a drastic switch from the vanilla method of prompt engineering. More than brushing up our prompts in natural language, we care about how to spell out our expectations in formal terms. Obviously, posing the right questions still remains a key point of our job, but we can stop worrying that minimal variations in the words we choose will impact the quality of the LLM's answers: that quality will mostly be influenced by the schemas we define. 
+
+
+```mermaid
+flowchart TD
+    A[Vertebrate Animals]
+    A --> D[Mammals]
+    D --> E[Canidae]
+    D --> G[Cetacea]
+    A --> H[Birds] 
+```
 
 ### FROM JSON OBJECTS TO PYTHON OBJECTS
 
@@ -265,3 +298,6 @@ Just so we can appreciate how convenient this approach is, let's now have a look
 ```
 
 In summary, with a few Pydantic classes we can easily define complex schemas and validators. When combined with LLMs, the schemas serve as templates that the outputs should comply with, while the built-in and custom validators catch any potential output errors, preventing issues before they affect our applications.
+
+### NOTE: 
+At the end, note that Pydantic is integraetd with various libraries to call LLMs. We have done that with Anthropic but we can do that with others.

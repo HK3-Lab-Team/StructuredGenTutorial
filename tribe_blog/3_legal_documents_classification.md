@@ -10,9 +10,13 @@
 
 **Abstract:** This blog post is a follow-up to our introduction to structured generation. Previously, we covered Pydantic as our foundational toolkit to define schemas for the LLMs' outputs. Now, we streamline the use of Pydantic in LLM-based workflows, demonstrating how structured generation works in practice.
 
-Remember that our structured generation approach involves two key steps: (1) defining the expected structure and (2) implementing validation. If the task for the LLM is complex, we can break it down into smaller, manageable operations. For each step, we establish the expected structure and validate the outputs, ensuring that when we combine them, each component adheres to the desired format. This way, we can confidently handle complex tasks while maintaining control over the structure at every stage.
+Previously, we covered Pydantic as our foundational toolkit to define schemas for the LLMs’ outputs. Now, we streamline the use of Pydantic in LLM-based workflows, demonstrating how structured generation works in practice. We'll also demonstrate how combining Pydantic with Anthropic's Claude API can further enhance LLM reliability through output preconditioning. 
+
+If the task for the LLM is complex, we can break it down into smaller, manageable operations. For each step, we establish the expected structure and validate the outputs, ensuring that when we combine them, each component adheres to the desired format. This way, we can confidently handle complex tasks while maintaining control over the structure at every stage.
 
 In the following tutorial, we will implement structured generation in Python with Claude 3.5, a LLM released by Anthropic.
+
+You'll see how these tools can be applied to LLM outputs, adding a layer of safety before using them in critical processes. 
 
 ## Hands-on Exercise: Text Classification via Structured Generation
 
