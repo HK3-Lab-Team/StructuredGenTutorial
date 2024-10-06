@@ -179,7 +179,7 @@ For starters, it enables us to define schemas as classes comprising one or more 
 Here's the real catch. Pydantic automatically converts Python classes into JSON schemas to feed our LLMs, which means that we can write very complex schemas as user-friendly Python objects instead of JSON objects (4). Moreover, 
 it adds a layer of guarantee that we won't end up with incorrect data formats: Pydantic performs data validation according to our data type and custom constraints, catching errors before we find them in the LLM's outputs (5). 
 
-In other words, this library handles much of the heavy lifting for us, because it makes the LLM's answers less likely to jailbreaking. So let’s familiarize ourselves with the basics before integrating Pydantic into our LLM calls. 
+In other words, this library handles much of the hard work for us, because it makes the LLM's answers less likely to jailbreaking. So let’s familiarize ourselves with the basics before integrating Pydantic into our LLM calls. 
 
 
 ## Writing Schemas in Pydantic
@@ -376,22 +376,40 @@ In summary, with a few Pydantic classes we can easily define complex schemas and
 
 ## A Workflow with Pydantic and Anthropic's Claude API
 
-We have defined schemas with custom constraints. Now we'll see why Pydantic is useful in practice, as it  detects potential errors at runtime, which is a lot safer to work with compared to first collecting all answers and then loading into relevant objects.
+We’ll now put Pydantic into practice to see how it detects potential errors at runtime. You’ll notice how this library is much safer to work with, compared to first collecting all the LLM answers and then loading them into the relevant objects for validation.
 
 
-We set the environment as in the previous tutorial.
+First, set the LLM environment with your Anthropic API key, as in our past tutorial [gentle-intro.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/gentle-intro.ipynb).
+
+
+Next, we provide the model with an example of the desired output format directly in the prompt
 
 ```python
+
+schema = Dogs.model_json_schema()
+
 response = client.messages.create(
         model="claude-3-5-sonnet-20240620",
-        system=f"You are a helpful assistant that responds in the same format as the following example schema: {Dogs}",
+        system=f"You are a helpful assistant that responds in the same format as the following example schema: {schema}",
         messages=[
-            {"role": "user", "content": "Extract from: ..."}
+            {"role": "user", "content": "Extract dog information from: Bella is a 6 years old curly black Poodle, who loves playing with a yellow ball."}
         ],
         max_tokens=200,
+        n = 10,
     )
 ```
 
+This code snippet calls the model n= 10 times.
+```python
+for choice in resp.choices:
+    json = choice.message.content
+    try:
+        person = Dogs.model_validate_json(json)
+        print(f"correctly parsed {person=}")
+    except Exception as e:
+        print("error!!")
+        print(json)
+```
 
 Validation
 
