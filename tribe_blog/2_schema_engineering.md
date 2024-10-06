@@ -374,19 +374,45 @@ Just so we can appreciate how convenient this approach is, let's now have a look
 In summary, with a few Pydantic classes we can easily define complex schemas and validators. When combined with LLMs, the schemas serve as templates that the outputs should comply with, while the built-in and custom validators catch any potential output errors, preventing issues before they affect our applications.
 
 
-## A Workflow with Pydantic
+## A Workflow with Pydantic and Anthropic's Claude API
 
-1. Define Schemas
-We add rules and constraints, so that  Pydantic will be able to detect potential errors at runtime, which is a lot safer to work with.
+We have defined schemas with custom constraints. Now we'll see why Pydantic is useful in practice, as it  detects potential errors at runtime, which is a lot safer to work with compared to first collecting all answers and then loading into relevant objects.
 
-2. Set Environment
-3. Validate
- Missing: validation with context
+
+We set the environment as in the previous tutorial.
+
+```python
+response = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        system=f"You are a helpful assistant that responds in the same format as the following example schema: {Dogs}",
+        messages=[
+            {"role": "user", "content": "Extract from: ..."}
+        ],
+        max_tokens=200,
+    )
+```
+
+
+Validation
+
+
+1. Raising errors immediately
+2. We can define a retry function to resolve mistakes, e.g., giving the error as part of the prompt
+3. validation with context
 E.g., validate that clauses are part of paragraph
-
 We add paragraph to outputs
 
 
-
-### NOTE: 
+### Learning More
 At the end, note that Pydantic is integraetd with various libraries to call LLMs. We have done that with Anthropic but we can do that with others.
+
+
+___
+
+If you found this tutorial helpful, please consider showing your support:
+
+- Star our GitHub repository: [StructuredGenTutorial](https://github.com/HK3-Lab-Team/StructuredGenTutorial)
+- Stay tuned for our next blog post on [tribe.ai/blog](https://www.tribe.ai/blog)
+- Follow us on Twitter:
+   - [@hyp_enri](https://twitter.com/hyp_enri)
+   - [@cyndesama](https://twitter.com/cyndesama)
