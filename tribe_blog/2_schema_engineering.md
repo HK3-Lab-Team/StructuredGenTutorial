@@ -34,9 +34,9 @@ So, what constitutes a good schema? Attempting a definite answer would be pointl
 
 ### Structural Constraints, Typological Constraints, and Others
 
-In the realm of LLMs, schemas act as templates for text generation. Therefore, we will start by thinking about the features we'd like to find (or don't want to find) in the LLM answers to ''backpropagate'' those requirements into schema design.
+When fed to LLMs, schemas act as templates for text generation. Therefore, we will start by thinking about the features we'd like to find (or wouldn't like to find) in the LLM answers to ''backpropagate'' those requirements into the design of our schemas.
 
-Imagine we wanted to use a LLM to extract dates and company names from text. Naturally, the model might produce a string like `unstructured_answer` below, which is not ideal. It requires handcrafted and potentially complex rules to extrapolate date and company names from unstructured text. 
+Imagine we wanted to use a LLM to extract dates and company names from text. Naturally, the model might produce a string like `unstructured_answer` below. This string is suboptimal, because it requires handcrafted and potentially complex rules to extrapolate date and company names from unstructured text. 
 ```python
 our_input = f"Using this {schema}, extract company name and date from: Apple Inc. was founded on April 1, 1976."
 
@@ -46,8 +46,8 @@ unstructured_answer = "All right, understood. The company in question is Apple a
 
 
 
-What we aim to obtain is something more similar to `structured_answer`, where information is neatly organized and easy to parse for further processing: the string starts with a left curly bracket, followed by the word "Date", a space, a semicolon, a string indicating an year and so on. For this reason,
-it can be loaded into a dictionary.
+What we aim to obtain is something more similar to `structured_answer`, where information is neatly organized and ready to parse for further processing. This string starts with a left curly bracket, followed by the word "Date", a space, a semicolon, a string indicating an year and so on; for this reason,
+it can be easily loaded into a dictionary.
 
 
 ```python
@@ -60,7 +60,7 @@ parsed_answer = {
   }
 ``` 
 
-Still, `structured_answer` is not quite ideal. While it follows the structural division for "Date" and "Company," it omits an important piece of information (the Company name) and incorrectly represents the other (the Date) as text rather than as an integer. Ideally, no information should be missing from the LLM's response, and all parts should be easily convertible into the correct data types.
+Still, `structured_answer` is not quite perfect. While it follows the structural division for "Date" and "Company," it omits an important piece of information (the Company name) and incorrectly represents the other (the Date) as text rather than as an integer. Ideally, no information should be missing from the LLM's response, and all parts should be convertible into the correct data types.
 
 
 The string `parsed_answer` below meets all such criteria: it can be turned into a dictionary where keys represent our target information, values are populated with the corresponding parts of the LLM's answer, and all values are not empty and of the correct data type.
@@ -136,10 +136,10 @@ hard_json_schema = {
 ```
 
 
-This example shows that the expression of schemas in terms of JSON objects (but for that matter, also YAML objects and dictionaries) can be inconveninent.
-Schemas are difficult to write for complex tasks, and the code becomes chaotic if we introduce nested structures. Note indeed that `hard_json_schema` is much more convoluted y than `json_schema`, in spite of them serving very similar tasks.
+This example shows that the expression of schemas in terms of JSON objects (but for that matter, also YAML objects or dictionaries) can be inconveninent.
+Schemas are difficult to write for complex tasks, and the code becomes chaotic if we introduce nested structures. Note indeed that `hard_json_schema` is much more convoluted than the earlier `json_schema`, in spite of them serving very similar tasks.
 
-Most importantly, after passing a schema to a model, one can only hope that the answers' types and the additional custom rules are respected. But to know they actually are, we must (try to) parse them, to compare what we obtained with what we expected. 
+Most importantly, after passing a schema to a model, one can only hope that the answers' types and the additional custom rules are respected. But to know they actually are, we must (try to) parse them, and compare what we obtained with what we expected. 
 
 ```python
 our_input = f"Using this {hard_json_schema}, extract information from the following text: ..."
@@ -150,9 +150,9 @@ structured_answer = "{records : {Date: twentytwenty, ..."# rest of the LLM answe
 ```
 
 
-This strategy for data validation is inefficient when working with substantial amounts of data, because it requires us to inspect the answers of LLMs, eventually catch mistakes, and implement solutions to resolve them. 
+This strategy for data validation is inefficient when working with substantial amounts of data, because it requires writing custom code to manually inspect every part of the LLM outputs and catch potential errors. 
 
-How can we make our approach more robust? By using Pydantic, a Python library (with over 70M downloads per week!) that offers powerful tools to simplify both the __representation__ of schemas and __validation__ of LLM-produced data. You can install it with the following command in your terminal:
+How can we make our approach more robust than that? By using Pydantic, a Python library (with over 70M downloads per week!) that offers powerful tools to simplify both the __representation__ of schemas and the __validation__ of LLM-produced data. You can install it with the following command in your terminal:
 
 ```bash
 pip install pydantic==2.9.1
@@ -162,7 +162,7 @@ pip install pydantic==2.9.1
 
 
 
-Pydantic facilitates the achievement of all schema desiderata we have outlined so far.
+Pydantic facilitates the achievement of the schema desiderata we have outlined so far.
 
 || Desiderata| Using Pydantic |
 |---------|----------|----------|
@@ -176,16 +176,15 @@ Pydantic facilitates the achievement of all schema desiderata we have outlined s
 For starters, it enables us to define schemas as classes comprising one or more fields, where we specify (1) the structure we expect from the LLM outputs, (2) type hints, and (3) custom validators for the data that will populate those fields. 
 
 
-Here's the real catch. Pydantic automatically converts Python classes into JSON schemas to feed our LLMs, which means that we can write very complex schemas as user-friendly Python objects instead of JSON objects (4). Moreover, 
-it adds a layer of guarantee that we won't end up with incorrect data formats: Pydantic performs data validation according to our data type and custom constraints, catching errors before we find them in the LLM's outputs (5). 
+But here's the real catch. Pydantic converts Python classes into JSON schemas to feed our LLMs. This means that we can write very complex schemas as user-friendly Python objects instead of JSON objects (4). Moreover, 
+Pydantic adds a layer of guarantee that we won't end up with incorrect data formats: it automatically performs data validation according to our data type and custom constraints (5). 
 
-In other words, this library handles much of the hard work for us, because it makes the LLM's answers less likely to jailbreaking. So let’s familiarize ourselves with the basics before integrating Pydantic into our LLM calls. 
+In other words, this library handles much of the hard work for us. So let’s familiarize ourselves with the basics of Pydantic before integrating it into our LLM calls. 
 
 
 ## Writing Schemas in Pydantic
 
-
-As an exercise, we’ll define a schema to guide an LLM in extracting relevant information about dogs from text. To keep it simple, we’ll focus on capturing key details like the dog’s name, breed, favorite toy, age, and hair characteristics (type and color).
+As an exercise to define schemas and validation rules, we’ll define a schema to guide an LLM in extracting relevant information about dogs from text. We will keep it simple, so we’ll focus on capturing key details like the dog’s name, breed, favorite toy, age, and hair characteristics (texture and color).
 
 <br>
 <div style="text-align: center;"> <strong>A visualization of the schema.</strong>
@@ -374,55 +373,162 @@ Just so we can appreciate how convenient this approach is, let's now have a look
 In summary, with a few Pydantic classes we can easily define complex schemas and validators. When combined with LLMs, the schemas serve as templates that the outputs should comply with, while the built-in and custom validators catch any potential output errors, preventing issues before they affect our applications.
 
 
-## A Workflow with Pydantic and Anthropic's Claude API
+## Workflow Comparison with and without Pydantic, Calling Anthropic's Claude LLM
 
-We’ll now put Pydantic into practice to see how it detects potential errors at runtime. You’ll notice how this library is much safer to work with, compared to first collecting all the LLM answers and then loading them into the relevant objects for validation.
-
-
-First, set the LLM environment with your Anthropic API key, as in our past tutorial [gentle-intro.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/gentle-intro.ipynb).
+We will put these tools into practice by implementing the same task with and without Pydantic. We will demonstrated the advantage of integrating this library with Anthropic's Claude LLM, but be aware that the same approach can be applied with other models.
 
 
-Next, we provide the model with an example of the desired output format directly in the prompt
+Start by following these steps:
+- configure your LLM environment with your Anthropic API key. 
+If you don't know how to do this, refer to our previous tutorial on basic LLM setup ([gentle-intro.ipynb](https://github.com/HK3-Lab-Team/StructuredGenTutorial/blob/main/notebooks/gentle-intro.ipynb));
+
+- set up the API Call. You can create a helper function `call_model()` that handles our communication with `claude-3-5-sonnet-20240620`. This function
+makes an API call to Claude 3.5 Sonnet, specifying the actual text we want to extract information from with `user prompt`, and it
+returns the response content.
 
 ```python
+def call_model(sys_prompt, user_prompt):
+    response = client.messages.create(
+        model="claude-3-5-sonnet-20240620",
+        system=sys_prompt,
+        messages=[
+            {"role": "user", "content": "Extract dog information from: Bella is a curly black Poodle, who loves playing with a ball.\n"}
+        ],
+        max_tokens=1024,
+    )
+    # access the response
+    llm_answer = response.content[0].text
+    return llm_answer
+```
+
+
+
+
+
+### WITH PYDANTIC
+
+We use Pydantic's `model_json_schema()` method to generate a JSON schema from our `Dogs` class. For simplicity, we can use a more basic, shorter definition of the class.
+
+```python
+
+class BasicDogs(BaseModel):
+    breed: str = Field(description="The name of an existing breed")
+    toy: str = Field(max_length=4)
 
 schema = Dogs.model_json_schema()
-
-response = client.messages.create(
-        model="claude-3-5-sonnet-20240620",
-        system=f"You are a helpful assistant that responds in the same format as the following example schema: {schema}",
-        messages=[
-            {"role": "user", "content": "Extract dog information from: Bella is a 6 years old curly black Poodle, who loves playing with a yellow ball."}
-        ],
-        max_tokens=200,
-        n = 10,
-    )
 ```
 
-This code snippet calls the model n= 10 times.
+We can pass the schema to the model by including it in
+the system prompt.
+
+
 ```python
-for choice in resp.choices:
-    json = choice.message.content
-    try:
-        person = Dogs.model_validate_json(json)
-        print(f"correctly parsed {person=}")
-    except Exception as e:
-        print("error!!")
-        print(json)
+sys_prompt = f"You are a helpful assistant that responds in the same format as the following example schema: {schema}"
+
 ```
 
-Validation
+Now, we make multiple calls to the LLM and validate the responses against the schema:
 
 
-1. Raising errors immediately
-2. We can define a retry function to resolve mistakes, e.g., giving the error as part of the prompt
-3. validation with context
-E.g., validate that clauses are part of paragraph
-We add paragraph to outputs
+```python
+for i in range(10):
+    print(f"LLM call number: {i}")
+    llm_answer = call_model(sys_prompt,user_prompt)
+    try:
+        # Validates at once all fields
+        dog = BasicDogs.model_validate_json(llm_answer)
+    except ValidationError as e:
+        print("Error!")
+        print(llm_answer)
+```
+Note that after calling the model, we are immediately validating the response using Pydantic’s model_validate_json() method. This ensures that the LLM’s output conforms to the schema we defined in the BasicDogs class. If any fields are missing or incorrect, Pydantic will raise a ValidationError, which we can catch and handle.
+
+
+This validation is particularly valuable because we get a complete picture of all validation issues in one go, so we don't need waste time fixing issues one by one only to discover more later.
+
+
+💡 Tip: You can use the error information to implement efficient retry strategies. For instance, you can use the comprehensive error information to implement smart retry logic by crafting specific system prompts:
+
+```python
+        # add to previous code snippet
+        ret_sys_p = f"You are a helpful assistant that responds in the same format as the following example schema: {schema}. Previously, you gave me this output: {llm_answer}. This is incorrect because of these errors: {e}."
+        retry_answer =  call_model(sys_prompt,user_prompt)
+        try:
+            dog = BasicDogs.model_validate_json(retry_answer)
+        except ValidationError:
+            print("Still Error!")
+```
+
+
+### WITHOUT PYDANTIC
+
+To illustrate how much Pydantic simplifies our workflow, let's attempt the same task without using it. 
+
+We start by defining a JSON schema manually and include it in the system prompt. This time, we need to explicitly specify our constraints in the prompt in natural language, because we don't have type hints and Field descriptions at our disposal.
+
+```python
+import json
+
+manual_schema = {
+    "type": "object",
+    "properties": {
+        "breed": { "type": "string" },
+        "toy": { "type": "string" }
+        },
+     "required": ["breed","toy"] 
+      }
+
+sys_prompt = f"You are a helpful assistant that responds in the same format as the following example schema: {manual_schema}. Note that toy can have max four characters."
+```
+
+Next, we call the LLM and manually validate the output:
+
+
+```python
+for i in range(10):
+    print(f"LLM call number: {i}")
+    llm_answer = call_model(sys_prompt,user_prompt)
+    # convert string into a dictionary
+    llm_dict = json.loads(llm_answer)
+    # Check that the data can be converted into a dictionary
+    dog_dictionary = { "breed": llm_dict["breed"],
+                      "toy": llm_dict["toy"]
+                      }
+    # Check if constraints are respected
+    try:
+        assert type(dog_dictionary["breed"])==str
+        assert type(dog_dictionary["toy"])==str
+        assert len(dog_dictionary["toy"])<=4
+    except AssertionError as e:
+        print("Error!")
+```
+
+This example is relatively simple, but for more complex class definitions, we would need to write custom validation for every field. We’d also have to implement retry logic in response to all the errors we manually detect, which would make the process far more cumbersome compared to using Pydantic.
+
+## Conclusion
+
+In this blog post, we introduced the use of Pydantic for schema generation and validation in combination with Anthropic's Claude LLM.
+
+Key Takeaways:
+
+1. Schema-driven text generation: Using Pydantic, we were able to guide LLM outputs into predefined formats, ensuring that the generated text adheres to the desired structure and types.
+
+2. Simplified schema creation: Pydantic simplifies schema creation by turning Python classes into JSON schemas, enabling easier validation of LLM outputs against expected data formats.
+
+3. Using built-in and custom validators allows us to automatically catch errors, making the process more efficient than manually parsing and validating outputs.
+
+4. Integrating Pydantic with LLMs ensures that outputs are reliable and ready for seamless processing, reducing the risk of incorrect or incomplete data.
+
+<br>
+
+Up to this point, we have been providing LLMs with an example of the desired output format directly in the prompt. While this approach helps guide the models, it still leaves room for catching errors after they are produced. In the upcoming tutorial, we'll explore approaches where Pydantic handles validation before we end up wth incorrect data formats, 
+overall making the LLM's answers less likely to jailbreaking.
 
 
 ### Learning More
-At the end, note that Pydantic is integraetd with various libraries to call LLMs. We have done that with Anthropic but we can do that with others.
+
+To know more about Pydantic, we suggest you 
+explore the [Pydantic documentation](https://docs.pydantic.dev/latest/), particularly the sections on the wide range of [validators](https://docs.pydantic.dev/latest/concepts/validators/#dataclass-validators) it provides.
 
 
 ___

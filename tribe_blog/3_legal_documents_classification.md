@@ -163,3 +163,6 @@ for ind, entry in enumerate(sampled_test_set):
         'body': body
     })
 ```
+
+___
+Note that Pydantic is integraetd with various libraries to call LLMs: Instructor,  Libraries like Marvin, Langchain, and Llamaindex.
